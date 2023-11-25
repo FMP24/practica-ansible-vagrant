@@ -1,0 +1,29 @@
+- name: Set domain
+  hostname:
+    name: "{{ item['dominio'] }}"
+  with_items:
+    - "{{ mysqlbd }}"
+
+- name: resolve localhost
+  lineinfile: dest=/etc/hosts regexp="^127.0.1.1 bd bd" line="127.0.1.1 bd-fran bd-fran.avg.es" state=present
+  notify:
+    - restart mariadb
+
+- name: ensure mariadb is installed
+  apt:
+    pkg:
+      - mariadb-server
+      - python3-mysqldb
+
+- name: create database
+  mysql_db: name=item['datos']['bd_name'] state=present
+
+- name: create user mysql
+  mysql_user: name={{ item['datos']['bd_user'] }} host={{ item['datos']['bd_host'] }} password={{ item['datos']['bd_pass'] }} priv=item['datos']['bd_name'].*:ALL,GRANT
+  with_items:
+    - "{{ mysqlbd }}"
+
+- name: mariadb listen in eth2
+  lineinfile: dest=/etc/mysql/mariadb.conf.d/50-server.cnf regexp="^bind-address            = 127.0.0.1" line="bind-address            = 0.0.0.0" state=present
+  notify:
+    - restart mariadb

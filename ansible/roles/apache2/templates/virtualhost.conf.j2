@@ -1,0 +1,15 @@
+{% for item in virtualhosts %}
+<VirtualHost *:80>
+    ServerName {{ item['datos']['servername'] }}
+    DocumentRoot {{ item['datos']['documentroot'] }}
+
+    <Directory {{ item['datos']['documentroot'] }}>
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/{{ item['datos']['errorlog'] }}_error.log
+    CustomLog ${APACHE_LOG_DIR}/{{ item['datos']['accesslog'] }}_access.log combined
+</VirtualHost>
+{% endfor %}

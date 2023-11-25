@@ -1,0 +1,8 @@
+- name: Ensure system is updated
+  apt: update_cache=yes upgrade=yes
+
+- name: Inject ssh pubkeys on authorized_keys
+  authorized_key:
+    user: vagrant
+    state: present
+    key: "{{ lookup('file', '/home/fran/.ssh/id_rsa.pub') }}"

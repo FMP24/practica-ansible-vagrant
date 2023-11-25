@@ -1,0 +1,81 @@
+- name: "ensure apache2 & mysql-client are installed"
+  apt:
+    pkg:
+      - apache2
+      - mariadb-client
+
+- name: Configurar el nuevo VirtualHost
+  template:
+    src: ../templates/virtualhost.conf.j2
+    dest: /etc/apache2/sites-available/{{ item['name'] }}.conf
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - "{{ virtualhosts }}"
+  notify: restart apache2
+
+- name: Add vhost symlink in sites-enabled.
+  file:
+    src: "/etc/apache2/sites-available/{{ item['name'] }}.conf"
+    dest: "/etc/apache2/sites-enabled/{{ item['name'] }}.conf"
+    state: link
+    mode: 0644
+  with_items:
+    - "{{ virtualhosts }}"
+  notify: restart apache2
+
+- name: Crear el DocumentRoot
+  file:
+    path: "{{ item['datos']['documentroot'] }}"
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: 0755
+  with_items:
+    - "{{ virtualhosts }}"
+
+#- name: Copiar Plantilla de la web sin el index
+#  copy:
+#    src: ../files/ollie/public_html/
+#    dest: "{{ item['datos']['documentroot'] }}"
+#    owner: www-data
+#    group: www-data
+#    mode: 0644
+#  with_items:
+#    - "{{ virtualhosts }}"
+
+- name: Copiar Index de la página estática
+  template:
+    src: ../templates/index.j2
+    dest: "{{ item['datos']['documentroot'] }}/index.html"
+    owner: www-data
+    group: www-data
+    mode: 0644
+  with_items:
+    - "{{ virtualhosts }}"
+
+#- name: "Copiar fichero de configuración"
+#  copy:
+#    src: etc/apache2/ports.conf
+#    dest: /etc/apache2/ports.conf
+#    owner: root
+#    group: root
+#    mode: '0644'
+
+- name: Enable Apache mods.
+  apache2_module:
+    state: present
+    name: "{{ item['name'] }}"
+  with_items:
+    - "{{ mods_enabled }}"
+  notify: restart apache2
+
+## intentare un lineinfile en apache2.conf a ver si se soluciona, o descomentar lo de arriba.
+
+- name: Añadir resolución estática de la máquina bd
+  lineinfile:
+    path: "/etc/hosts"
+    line: "{{ ip_bd }} {{ item['dominio'] }}"
+  with_items:
+    - "{{ mysqlbd }}"

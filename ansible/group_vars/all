@@ -1,0 +1,25 @@
+virtualhosts:
+  - name: practica-fran 
+    datos:
+      servername: practica-fran.avg.es 
+      documentroot: /var/www/practica-fran 
+      errorlog: practica-fran
+      accesslog: practica-fran
+
+mods_enabled:
+  - name: rewrite
+
+mysqlbd:
+  - dominio: bd-fran.avg.es	
+    datos:
+      bd_name: admin_bd
+      bd_user: admin
+      bd_pass: admin
+      bd_host: '%'
+
+ip_gateway: 10.0.0.1
+ip_web: 10.0.0.2
+ip_bd: 10.0.0.3
+ip_datosweb: 10.1.0.2
+ip_datosbd: 10.1.0.3
+ip_cliente: 10.0.0.4

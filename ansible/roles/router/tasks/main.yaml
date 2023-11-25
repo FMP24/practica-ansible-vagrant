@@ -1,0 +1,35 @@
+- name: Instalar iptables e iptables-persistent
+  apt:
+    pkg:
+      - iptables
+      - iptables-persistent
+
+- name: configurar SNAT
+  iptables:
+    table: nat
+    chain: POSTROUTING
+    out_interface: eth1
+    jump: MASQUERADE
+    protocol: tcp
+    source: 10.0.0.0/16
+  become: yes
+
+- name: Activar bit de forwarding
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: '1'
+    sysctl_set: true
+
+- name: DNAT
+  iptables:
+    table: nat
+    chain: PREROUTING
+    in_interface: eth1
+    destination_port: "80"
+    protocol: tcp
+    to_destination: "{{ ip_web }}"
+    jump: DNAT
+  become: yes
+
+- name: guardar configuración iptables
+  shell: iptables-save > /etc/iptables/rules.v4
